@@ -1,0 +1,31 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-install-openshift-gitops
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Installs the OpenShift GitOps Operator on selected managed clusters using OperatorPolicy.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1beta1
+      kind: OperatorPolicy
+      metadata:
+        name: install-openshift-gitops
+      spec:
+        remediationAction: enforce
+        severity: medium
+        complianceType: musthave
+        upgradeApproval: Automatic
+        subscription:
+          channel: latest
+          name: openshift-gitops-operator
+          namespace: openshift-operators
+          source: redhat-operators
+          sourceNamespace: openshift-marketplace

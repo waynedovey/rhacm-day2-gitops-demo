@@ -1,0 +1,51 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-install-cert-manager
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Installs cert-manager Operator for Red Hat OpenShift on selected managed clusters using OperatorPolicy.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: cert-manager-operator-namespace
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: cert-manager-operator
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1beta1
+      kind: OperatorPolicy
+      metadata:
+        name: install-cert-manager
+      spec:
+        remediationAction: enforce
+        severity: medium
+        complianceType: musthave
+        upgradeApproval: Automatic
+        operatorGroup:
+          name: cert-manager-operator
+          namespace: cert-manager-operator
+          targetNamespaces:
+          - cert-manager-operator
+        subscription:
+          channel: stable-v1
+          name: openshift-cert-manager-operator
+          namespace: cert-manager-operator
+          source: redhat-operators
+          sourceNamespace: openshift-marketplace

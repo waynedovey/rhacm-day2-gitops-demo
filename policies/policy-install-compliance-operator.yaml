@@ -1,0 +1,51 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-install-compliance-operator
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CA Security Assessment and Authorization
+    policy.open-cluster-management.io/controls: CA-2 Security Assessments, CA-7 Continuous Monitoring
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Installs the Compliance Operator on selected managed clusters using OperatorPolicy.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: compliance-operator-namespace
+      spec:
+        remediationAction: enforce
+        severity: high
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: openshift-compliance
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1beta1
+      kind: OperatorPolicy
+      metadata:
+        name: install-compliance-operator
+      spec:
+        remediationAction: enforce
+        severity: high
+        complianceType: musthave
+        upgradeApproval: Automatic
+        operatorGroup:
+          name: compliance-operator
+          namespace: openshift-compliance
+          targetNamespaces:
+          - openshift-compliance
+        subscription:
+          channel: stable
+          name: compliance-operator
+          namespace: openshift-compliance
+          source: redhat-operators
+          sourceNamespace: openshift-marketplace

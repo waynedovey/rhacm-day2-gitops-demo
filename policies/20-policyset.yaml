@@ -1,0 +1,12 @@
+apiVersion: policy.open-cluster-management.io/v1beta1
+kind: PolicySet
+metadata:
+  name: day2-operators
+  namespace: rhacm-policies
+spec:
+  description: RHACM Day 2 operator baseline installed and enforced by policy.
+  policies:
+  - policy-day2-standard-namespace
+  - policy-install-openshift-gitops
+  - policy-install-cert-manager
+  - policy-install-compliance-operator

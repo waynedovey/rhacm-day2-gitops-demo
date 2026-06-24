@@ -1,0 +1,4 @@
+resources:
+- 10-placements.yaml
+- 20-gitopscluster.yaml
+- 30-appset-guestbook-dev.yaml

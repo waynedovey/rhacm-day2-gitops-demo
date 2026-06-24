@@ -1,0 +1,8 @@
+resources:
+- 10-placements.yaml
+- 20-policyset.yaml
+- policy-day2-standard-namespace.yaml
+- policy-install-openshift-gitops.yaml
+- policy-install-cert-manager.yaml
+- policy-install-compliance-operator.yaml
+- 90-placementbindings.yaml
