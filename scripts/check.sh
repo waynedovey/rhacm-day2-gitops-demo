@@ -34,3 +34,11 @@ for c in "$DEV_CLUSTER" "$PROD_CLUSTER"; do
   oc --context "${c}" -n openshift-lightspeed get pods,deploy,olsconfig 2>/dev/null || true
   echo
 done
+
+echo "== OLMv1 Pipelines ClusterExtension status on spokes =="
+for c in "$DEV_CLUSTER" "$PROD_CLUSTER"; do
+  echo "-- ${c} --"
+  oc --context "${c}" get clusterextension pipelines-operator 2>/dev/null || true
+  oc --context "${c}" get clusterextension pipelines-operator -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{" reason="}{.reason}{"\n"}{end}' 2>/dev/null || true
+  echo
+done

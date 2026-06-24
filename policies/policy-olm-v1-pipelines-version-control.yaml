@@ -1,0 +1,74 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-olm-v1-pipelines-version-control
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Demonstrates fleet-wide operator version control by managing an OLMv1 ClusterExtension through RHACM policy.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: olm-v1-pipelines-version-control
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: pipelines
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: pipelines-installer
+              namespace: pipelines
+        # Demo shortcut: grants broad rights to the OLMv1 installer service account.
+        # For production, replace this with the least-privilege ClusterRole generated
+        # from the operator bundle/CSV permissions.
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: pipelines-installer-cluster-admin-demo
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: cluster-admin
+            subjects:
+            - kind: ServiceAccount
+              name: pipelines-installer
+              namespace: pipelines
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: olm.operatorframework.io/v1
+            kind: ClusterExtension
+            metadata:
+              name: pipelines-operator
+            spec:
+              namespace: pipelines
+              serviceAccount:
+                name: pipelines-installer
+              source:
+                sourceType: Catalog
+                catalog:
+                  packageName: openshift-pipelines-operator-rh
+                  channels:
+                  - latest
+                  # Approved version window for the demo. Change this in Git to promote
+                  # operator upgrades across the RHACM managed fleet.
+                  version: ">=1.14.0, <2.1.0"
+                  upgradeConstraintPolicy: CatalogProvided

@@ -173,3 +173,61 @@ Check both spokes:
 oc --context dev-spoke  -n openshift-lightspeed get pods,deploy,olsconfig
 oc --context prod-spoke -n openshift-lightspeed get pods,deploy,olsconfig
 ```
+
+## OLMv1 operator lifecycle demo
+
+This repo also includes `policy-olm-v1-pipelines-version-control`, which demonstrates how RHACM can manage OLMv1 `ClusterExtension` resources across the fleet.
+
+The demo policy installs the Red Hat OpenShift Pipelines operator using OLMv1 and keeps it inside an approved version window:
+
+```yaml
+apiVersion: olm.operatorframework.io/v1
+kind: ClusterExtension
+metadata:
+  name: pipelines-operator
+spec:
+  namespace: pipelines
+  serviceAccount:
+    name: pipelines-installer
+  source:
+    sourceType: Catalog
+    catalog:
+      packageName: openshift-pipelines-operator-rh
+      channels:
+      - latest
+      version: ">=1.14.0, <2.0.0"
+      upgradeConstraintPolicy: CatalogProvided
+```
+
+Demo story:
+
+1. Git defines the approved operator version range.
+2. Argo CD syncs the RHACM policy to the hub.
+3. RHACM places the policy on `demo=day2` clusters.
+4. OLMv1 resolves and installs the latest Pipelines operator that matches the approved range.
+5. To promote a future operator version, change the version range in Git and let Argo/RHACM roll it out.
+
+To change the version range from your local repo:
+
+```bash
+./scripts/promote-olm-v1-pipelines-version.sh '>=1.14.0, <2.1.0'
+git add policies/policy-olm-v1-pipelines-version-control.yaml
+git commit -m 'Promote OLMv1 Pipelines operator version range'
+git push
+```
+
+Then refresh the policy app on the hub:
+
+```bash
+oc -n openshift-gitops annotate applications.argoproj.io/rhacm-day2-policies \
+  argocd.argoproj.io/refresh=hard --overwrite
+```
+
+Check both spokes:
+
+```bash
+oc --context dev-spoke  get clusterextension pipelines-operator -o yaml
+oc --context prod-spoke get clusterextension pipelines-operator -o yaml
+```
+
+**Demo note:** this sample uses a broad `cluster-admin` binding for the OLMv1 installer service account to keep the demo short. For production, replace it with least-privilege RBAC generated from the operator bundle/CSV permissions.

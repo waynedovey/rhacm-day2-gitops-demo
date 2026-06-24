@@ -6,4 +6,5 @@ resources:
 - policy-install-cert-manager.yaml
 - policy-install-compliance-operator.yaml
 - policy-install-openshift-lightspeed.yaml
+- policy-olm-v1-pipelines-version-control.yaml
 - 90-placementbindings.yaml
