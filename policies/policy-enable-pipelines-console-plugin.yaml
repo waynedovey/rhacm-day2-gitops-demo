@@ -1,0 +1,37 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-enable-pipelines-console-plugin
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Enables the OpenShift Pipelines console plugin after the Pipelines operator creates the ConsolePlugin backend.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: enable-pipelines-console-plugin
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: operator.openshift.io/v1
+            kind: Console
+            metadata:
+              name: cluster
+            spec:
+              # This enables the OpenShift Pipelines UI in the OpenShift Console.
+              # If your cluster already has other console plugins enabled, keep them
+              # in this list as well, or use scripts/enable-pipelines-console-plugin.sh
+              # which appends the plugin without removing existing entries.
+              plugins:
+              - pipelines-console-plugin

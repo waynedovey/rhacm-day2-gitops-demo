@@ -12,3 +12,4 @@ spec:
   - policy-install-compliance-operator
   - policy-install-openshift-lightspeed
   - policy-olm-v1-pipelines-version-control
+  - policy-enable-pipelines-console-plugin

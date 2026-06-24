@@ -7,4 +7,5 @@ resources:
 - policy-install-compliance-operator.yaml
 - policy-install-openshift-lightspeed.yaml
 - policy-olm-v1-pipelines-version-control.yaml
+- policy-enable-pipelines-console-plugin.yaml
 - 90-placementbindings.yaml

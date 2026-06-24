@@ -42,3 +42,12 @@ for c in "$DEV_CLUSTER" "$PROD_CLUSTER"; do
   oc --context "${c}" get clusterextension pipelines-operator -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{" reason="}{.reason}{"\n"}{end}' 2>/dev/null || true
   echo
 done
+
+echo "== Pipelines console plugin status on spokes =="
+for c in "$DEV_CLUSTER" "$PROD_CLUSTER"; do
+  echo "-- ${c} --"
+  oc --context "${c}" get consoleplugin pipelines-console-plugin 2>/dev/null || true
+  oc --context "${c}" get consoles.operator.openshift.io cluster -o jsonpath='{.spec.plugins}{"\n"}' 2>/dev/null || true
+  oc --context "${c}" -n openshift-pipelines get svc,endpoints,pods 2>/dev/null | egrep "console-plugin|NAME" || true
+  echo
+done

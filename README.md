@@ -231,3 +231,54 @@ oc --context prod-spoke get clusterextension pipelines-operator -o yaml
 ```
 
 **Demo note:** this sample uses a broad `cluster-admin` binding for the OLMv1 installer service account to keep the demo short. For production, replace it with least-privilege RBAC generated from the operator bundle/CSV permissions.
+
+## Enable the OpenShift Pipelines console plugin
+
+The Pipelines operator creates the `ConsolePlugin` object, but the OpenShift Console only loads it when the plugin name is present in the cluster Console config:
+
+```yaml
+apiVersion: operator.openshift.io/v1
+kind: Console
+metadata:
+  name: cluster
+spec:
+  plugins:
+  - pipelines-console-plugin
+```
+
+This repo includes `policy-enable-pipelines-console-plugin`, which uses RHACM policy to enable that UI plugin consistently on the managed spokes.
+
+Apply through the normal GitOps flow:
+
+```bash
+oc config use-context hub
+
+oc -n openshift-gitops annotate applications.argoproj.io/rhacm-day2-policies \
+  argocd.argoproj.io/refresh=hard --overwrite
+
+oc -n rhacm-policies annotate policy policy-enable-pipelines-console-plugin \
+  policy.open-cluster-management.io/trigger-update="$(date +%s)" --overwrite
+```
+
+Validate on both spokes:
+
+```bash
+for c in dev-spoke prod-spoke; do
+  echo "===== $c ====="
+  oc --context $c get consoleplugin pipelines-console-plugin
+  oc --context $c get consoles.operator.openshift.io cluster \
+    -o jsonpath='{.spec.plugins}{"\n"}'
+  oc --context $c -n openshift-console rollout status deployment/console
+  oc --context $c -n openshift-pipelines get svc,endpoints,pods | egrep 'console-plugin|NAME'
+done
+```
+
+For clusters that already have other Console plugins enabled, use the helper script to append the Pipelines plugin without removing existing entries:
+
+```bash
+./scripts/enable-pipelines-console-plugin.sh
+```
+
+Demo message:
+
+> The Pipelines operator creates the plugin backend, but enabling it in the OpenShift Console is a platform Day 2 decision. RHACM can enforce that setting across every managed cluster.

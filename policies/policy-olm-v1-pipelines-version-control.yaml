@@ -70,5 +70,5 @@ spec:
                   - latest
                   # Approved version window for the demo. Change this in Git to promote
                   # operator upgrades across the RHACM managed fleet.
-                  version: "1.21.x"                                 
+                  version: "1.21.x"
                   upgradeConstraintPolicy: CatalogProvided
