@@ -31,11 +31,11 @@ Initial install sends 100% traffic to the stable version. A Git change to the Ro
 ```bash
 oc --context dev-spoke -n bgd-rollouts-demo get rollout,svc,route,pods
 oc --context dev-spoke -n bgd-rollouts-demo get route bgd -o yaml | egrep -A8 'to:|alternateBackends:'
-oc --context dev-spoke -n bgd-rollouts-demo argo rollouts get rollout bgd --watch
+kubectl-argo-rollouts --context dev-spoke get rollout bgd -n bgd-rollouts-demo --watch
 ```
 
 Promote one step:
 
 ```bash
-oc --context dev-spoke argo rollouts promote bgd -n bgd-rollouts-demo
+kubectl-argo-rollouts --context dev-spoke promote bgd -n bgd-rollouts-demo
 ```

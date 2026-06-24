@@ -28,6 +28,21 @@ Each target cluster needs:
 2. A `RolloutManager` created in `openshift-gitops`
 3. The Argo Rollouts CLI plugin if you want to promote from the command line
 
+Install the CLI plugin on macOS:
+
+```bash
+brew install argoproj/tap/kubectl-argo-rollouts
+```
+
+Use the standalone binary form in this repo:
+
+```bash
+kubectl-argo-rollouts --context dev-spoke get rollout bgd -n bgd-rollouts-demo
+kubectl-argo-rollouts --context dev-spoke promote bgd -n bgd-rollouts-demo
+```
+
+Do not use `oc --context dev-spoke argo rollouts ...`; that puts the context flag before the plugin name and can fail with `flags cannot be placed before plugin name`.
+
 This repo includes an RHACM policy to create the `RolloutManager`:
 
 ```text
@@ -66,6 +81,12 @@ Watch the rollout:
 
 ```bash
 ./scripts/watch-bgd-rollout.sh dev-spoke
+```
+
+Check the current status without watching:
+
+```bash
+./scripts/status-bgd-rollout.sh dev-spoke
 ```
 
 Promote each pause:

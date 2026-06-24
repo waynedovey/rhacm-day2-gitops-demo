@@ -374,6 +374,7 @@ policies/policy-enable-openshift-gitops-rollouts.yaml
 ROLLOUTS-DEMO.md
 scripts/update-bgd-rollout-color.sh
 scripts/watch-bgd-rollout.sh
+scripts/status-bgd-rollout.sh
 scripts/promote-bgd-rollout-step.sh
 scripts/abort-bgd-rollout.sh
 scripts/promote-bgd-rollouts-to-prod.sh
@@ -393,6 +394,7 @@ git add apps/bgd-rollouts/04-rollout.yaml
 git commit -m "Update BGD rollout color to green"
 git push
 ./scripts/watch-bgd-rollout.sh dev-spoke
+./scripts/status-bgd-rollout.sh dev-spoke
 ./scripts/promote-bgd-rollout-step.sh dev-spoke
 ./scripts/promote-bgd-rollout-step.sh dev-spoke
 ```

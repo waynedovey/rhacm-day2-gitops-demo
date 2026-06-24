@@ -1,19 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 CTX="${1:-dev-spoke}"
-NS="bgd-rollouts-demo"
+NS="${NAMESPACE:-bgd-rollouts-demo}"
+ROLLOUT="${ROLLOUT:-bgd}"
 
-if oc --context "$CTX" argo rollouts version >/dev/null 2>&1; then
-  oc --context "$CTX" argo rollouts promote bgd -n "$NS"
-elif command -v kubectl >/dev/null 2>&1 && kubectl argo rollouts version >/dev/null 2>&1; then
-  kubectl --context "$CTX" argo rollouts promote bgd -n "$NS"
-else
-  cat >&2 <<MSG
-Argo Rollouts CLI plugin was not found.
-Install/use the OpenShift GitOps CLI plugin, then run:
-  oc --context $CTX argo rollouts promote bgd -n $NS
-
-You can also promote from the OpenShift/Argo Rollouts UI.
-MSG
-  exit 1
+# Use the standalone Argo Rollouts plugin binary. This avoids the kubectl/oc
+# plugin parser issue: "flags cannot be placed before plugin name: --context".
+if command -v kubectl-argo-rollouts >/dev/null 2>&1; then
+  kubectl-argo-rollouts --context "$CTX" promote "$ROLLOUT" -n "$NS"
+  exit 0
 fi
+
+# Fallback for environments where only kubectl plugin invocation works.
+# Important: --context must come after the plugin command, not before it.
+if command -v kubectl >/dev/null 2>&1 && kubectl argo rollouts version --client >/dev/null 2>&1; then
+  kubectl argo rollouts promote "$ROLLOUT" -n "$NS" --context "$CTX"
+  exit 0
+fi
+
+cat >&2 <<MSG
+Argo Rollouts CLI plugin was not found.
+
+Install it on macOS with:
+  brew install argoproj/tap/kubectl-argo-rollouts
+
+Then run:
+  ./scripts/promote-bgd-rollout-step.sh $CTX
+
+Direct command:
+  kubectl-argo-rollouts --context $CTX promote $ROLLOUT -n $NS
+MSG
+exit 1

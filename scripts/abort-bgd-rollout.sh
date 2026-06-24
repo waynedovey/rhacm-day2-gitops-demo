@@ -1,13 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
-CTX="${1:-dev-spoke}"
-NS="bgd-rollouts-demo"
 
-if oc --context "$CTX" argo rollouts version >/dev/null 2>&1; then
-  oc --context "$CTX" argo rollouts abort bgd -n "$NS"
-elif command -v kubectl >/dev/null 2>&1 && kubectl argo rollouts version >/dev/null 2>&1; then
-  kubectl --context "$CTX" argo rollouts abort bgd -n "$NS"
-else
-  echo "Argo Rollouts CLI plugin not found. Abort from the UI or install the CLI plugin." >&2
-  exit 1
+CTX="${1:-dev-spoke}"
+NS="${NAMESPACE:-bgd-rollouts-demo}"
+ROLLOUT="${ROLLOUT:-bgd}"
+
+# Use the standalone Argo Rollouts plugin binary. This avoids the kubectl/oc
+# plugin parser issue: "flags cannot be placed before plugin name: --context".
+if command -v kubectl-argo-rollouts >/dev/null 2>&1; then
+  kubectl-argo-rollouts --context "$CTX" abort "$ROLLOUT" -n "$NS"
+  exit 0
 fi
+
+# Fallback for environments where only kubectl plugin invocation works.
+# Important: --context must come after the plugin command, not before it.
+if command -v kubectl >/dev/null 2>&1 && kubectl argo rollouts version --client >/dev/null 2>&1; then
+  kubectl argo rollouts abort "$ROLLOUT" -n "$NS" --context "$CTX"
+  exit 0
+fi
+
+cat >&2 <<MSG
+Argo Rollouts CLI plugin was not found.
+
+Install it on macOS with:
+  brew install argoproj/tap/kubectl-argo-rollouts
+
+Direct command:
+  kubectl-argo-rollouts --context $CTX abort $ROLLOUT -n $NS
+MSG
+exit 1
