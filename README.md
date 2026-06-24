@@ -32,7 +32,7 @@ The `applicationsets/` path creates:
 oc label managedcluster <cluster-name> demo=day2 environment=dev --overwrite
 ```
 
-- `ApplicationSet` named `guestbook-dev` that deploys the public Argo CD guestbook example to the selected `environment=dev` cluster. With your cluster names, that means `dev-spoke` gets the app first and `prod-spoke` only gets it when you promote it.
+- `ApplicationSet` named `hello-openshift-dev` that deploys the OpenShift-safe `hello-openshift` demo app from this repo to the selected `environment=dev` cluster. With your cluster names, that means `dev-spoke` gets the app first and `prod-spoke` only gets it when you promote it.
 
 
 ### With your two managed clusters
@@ -41,7 +41,7 @@ Expected behaviour with `dev-spoke` and `prod-spoke`:
 
 | Cluster | Labels | RHACM policies | App deployment |
 |---|---|---|---|
-| `dev-spoke` | `demo=day2 environment=dev` | Yes | Yes, gets `guestbook-dev` |
+| `dev-spoke` | `demo=day2 environment=dev` | Yes | Yes, gets `hello-openshift-dev` |
 | `prod-spoke` | `demo=day2 environment=prod` | Yes | No, until promoted |
 
 ## Prereqs
@@ -63,7 +63,7 @@ git init
 git add .
 git commit -m "rhacm day2 gitops demo"
 git branch -M main
-git remote add origin https://github.com/<you>/rhacm-day2-gitops-demo.git
+git remote add origin https://github.com/waynedovey/rhacm-day2-gitops-demo
 git push -u origin main
 ```
 
@@ -82,7 +82,7 @@ Or pass different names if needed:
 Bootstrap from the hub. Use `global` if both managed clusters are visible through the global ManagedClusterSet:
 
 ```bash
-./scripts/bootstrap.sh https://github.com/<you>/rhacm-day2-gitops-demo.git main global
+./scripts/bootstrap.sh https://github.com/waynedovey/rhacm-day2-gitops-demo main global
 ```
 
 Check the cluster set first if you are unsure:
@@ -107,7 +107,7 @@ oc get policies -n rhacm-policies
 On the managed dev cluster:
 
 ```bash
-oc get pods,svc -n guestbook
+oc get pods,svc,route -n hello-openshift
 ```
 
 ## Demo drift remediation
@@ -132,7 +132,7 @@ For a quick live demo, relabel prod so the existing dev Placement selects it:
 ./scripts/promote-app-to-prod.sh
 ```
 
-The ApplicationSet should create another Argo CD Application for `prod-spoke`. For a cleaner long-running version, edit `applicationsets/10-placements.yaml` and change `placement-guestbook-dev` so the `environment` selector includes both `dev` and `prod`.
+The ApplicationSet should create another Argo CD Application for `prod-spoke`. For a cleaner long-running version, edit `applicationsets/10-placements.yaml` and change `placement-hello-openshift-dev` so the `environment` selector includes both `dev` and `prod`.
 
 ## Notes
 

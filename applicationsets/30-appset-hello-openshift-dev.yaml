@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: hello-openshift-dev
+  namespace: openshift-gitops
+spec:
+  generators:
+  - clusterDecisionResource:
+      configMapRef: ocm-placement-generator
+      labelSelector:
+        matchLabels:
+          cluster.open-cluster-management.io/placement: placement-hello-openshift-dev
+      requeueAfterSeconds: 30
+  template:
+    metadata:
+      name: '{{clusterName}}-hello-openshift'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/waynedovey/rhacm-day2-gitops-demo
+        targetRevision: main
+        path: apps/hello-openshift
+      destination:
+        name: '{{clusterName}}'
+        namespace: hello-openshift
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
