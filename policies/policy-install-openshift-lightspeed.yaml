@@ -66,7 +66,7 @@ spec:
               name: credentials
               namespace: openshift-lightspeed
             type: Opaque
-            stringData:
+            data:
               apitoken: '{{hub fromSecret "rhacm-policies" "ols-openai" "apitoken" hub}}'
         - complianceType: musthave
           objectDefinition:
