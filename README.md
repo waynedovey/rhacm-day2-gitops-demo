@@ -139,3 +139,37 @@ The ApplicationSet should create another Argo CD Application for `prod-spoke`. F
 - The policies use `OperatorPolicy`, which is cleaner for OLM-managed operators than hand-writing raw `Subscription` resources everywhere.
 - The ApplicationSet uses the OCM/RHACM `PlacementDecision` generator via the `ocm-placement-generator` ConfigMap.
 - This repo uses the push model for the app demo. For large fleets, consider the RHACM/OpenShift GitOps pull model or the Argo CD Agent path.
+
+## OpenShift Lightspeed on both spokes
+
+This repo includes `policy-install-openshift-lightspeed`, which targets every managed cluster labelled `demo=day2`. With the default demo labels, that means both `dev-spoke` and `prod-spoke`.
+
+The policy uses OpenAI as the sample LLM provider. Do not commit API tokens to Git. Store the token as a Secret on the RHACM hub in the same namespace as the policies:
+
+```bash
+export OLS_API_TOKEN='sk-...'
+export OLS_MODEL='gpt-4o-mini'
+./scripts/setup-lightspeed-openai.sh
+```
+
+Then commit and push the new policy files:
+
+```bash
+git add policies scripts README.md
+git commit -m "Add OpenShift Lightspeed policy"
+git push
+```
+
+Check the hub:
+
+```bash
+oc -n rhacm-policies get policy policy-install-openshift-lightspeed
+oc -n rhacm-policies describe policy policy-install-openshift-lightspeed
+```
+
+Check both spokes:
+
+```bash
+oc --context dev-spoke  -n openshift-lightspeed get pods,deploy,olsconfig
+oc --context prod-spoke -n openshift-lightspeed get pods,deploy,olsconfig
+```

@@ -1,0 +1,93 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-install-openshift-lightspeed
+  namespace: rhacm-policies
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/description: Installs and configures OpenShift Lightspeed on selected managed clusters.
+spec:
+  remediationAction: enforce
+  disabled: false
+  copyPolicyMetadata: false
+  policy-templates:
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: openshift-lightspeed-namespace
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: openshift-lightspeed
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1beta1
+      kind: OperatorPolicy
+      metadata:
+        name: install-openshift-lightspeed
+      spec:
+        remediationAction: enforce
+        severity: medium
+        complianceType: musthave
+        upgradeApproval: Automatic
+        operatorGroup:
+          name: openshift-lightspeed
+          namespace: openshift-lightspeed
+          targetNamespaces:
+          - openshift-lightspeed
+        subscription:
+          channel: stable
+          name: lightspeed-operator
+          namespace: openshift-lightspeed
+          source: redhat-operators
+          sourceNamespace: openshift-marketplace
+  - objectDefinition:
+      apiVersion: policy.open-cluster-management.io/v1
+      kind: ConfigurationPolicy
+      metadata:
+        name: configure-openshift-lightspeed
+      spec:
+        remediationAction: enforce
+        severity: medium
+        object-templates:
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: credentials
+              namespace: openshift-lightspeed
+            type: Opaque
+            stringData:
+              apitoken: '{{hub fromSecret "rhacm-policies" "ols-openai" "apitoken" hub}}'
+        - complianceType: musthave
+          objectDefinition:
+            apiVersion: ols.openshift.io/v1alpha1
+            kind: OLSConfig
+            metadata:
+              name: cluster
+            spec:
+              llm:
+                providers:
+                - name: openai
+                  type: openai
+                  credentialsSecretRef:
+                    name: credentials
+                  url: https://api.openai.com/v1
+                  models:
+                  - name: '{{hub fromConfigMap "rhacm-policies" "ols-openai-config" "model" hub}}'
+              ols:
+                defaultProvider: openai
+                defaultModel: '{{hub fromConfigMap "rhacm-policies" "ols-openai-config" "model" hub}}'
+                logLevel: INFO
+                introspectionEnabled: true
+                deployment:
+                  replicas: 1

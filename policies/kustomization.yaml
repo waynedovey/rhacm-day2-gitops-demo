@@ -5,4 +5,5 @@ resources:
 - policy-install-openshift-gitops.yaml
 - policy-install-cert-manager.yaml
 - policy-install-compliance-operator.yaml
+- policy-install-openshift-lightspeed.yaml
 - 90-placementbindings.yaml

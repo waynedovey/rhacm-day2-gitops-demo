@@ -10,3 +10,4 @@ spec:
   - policy-install-openshift-gitops
   - policy-install-cert-manager
   - policy-install-compliance-operator
+  - policy-install-openshift-lightspeed
