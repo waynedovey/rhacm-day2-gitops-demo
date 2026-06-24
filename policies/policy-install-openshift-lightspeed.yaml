@@ -89,5 +89,3 @@ spec:
                 defaultModel: '{{hub fromConfigMap "rhacm-policies" "ols-openai-config" "model" hub}}'
                 logLevel: INFO
                 introspectionEnabled: true
-                deployment:
-                  replicas: 1
