@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: frontend-smoke-test
+  namespace: postgres-frontend-demo
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+  labels:
+    app: frontend-smoke-test
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: frontend-smoke-test
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke-test
+          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              microdnf install -y curl >/dev/null 2>&1 || true
+              curl -sf http://frontend.postgres-frontend-demo.svc.cluster.local:8080/ | grep -q "Frontend started after PostgreSQL was ready"
+              echo "Smoke test passed"

@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: frontend
+  namespace: postgres-frontend-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app: frontend
+spec:
+  to:
+    kind: Service
+    name: frontend
+  port:
+    targetPort: http

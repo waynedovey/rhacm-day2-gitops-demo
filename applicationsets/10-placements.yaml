@@ -42,3 +42,27 @@ spec:
     operator: Exists
   - key: cluster.open-cluster-management.io/unreachable
     operator: Exists
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: placement-postgres-frontend-dev
+  namespace: openshift-gitops
+spec:
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchExpressions:
+        - key: demo
+          operator: In
+          values:
+          - day2
+        - key: environment
+          operator: In
+          values:
+          - dev
+  tolerations:
+  - key: cluster.open-cluster-management.io/unavailable
+    operator: Exists
+  - key: cluster.open-cluster-management.io/unreachable
+    operator: Exists

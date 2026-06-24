@@ -2,3 +2,4 @@ resources:
 - 10-placements.yaml
 - 20-gitopscluster.yaml
 - 30-appset-hello-openshift-dev.yaml
+- 40-appset-postgres-frontend-syncwave-dev.yaml

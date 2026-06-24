@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: postgres-frontend-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      initContainers:
+        - name: wait-for-seeded-database
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database-user
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database-password
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database-name
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database-password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for seeded database table before starting frontend"
+              until psql -h postgres -p 5432 -U "$POSTGRESQL_USER" -d "$POSTGRESQL_DATABASE" -tAc "SELECT COUNT(*) FROM demo_items;" | grep -Eq '^[[:space:]]*[1-9][0-9]*'; do
+                echo "Database not seeded yet"
+                sleep 5
+              done
+              echo "Database is seeded. Frontend can start."
+      containers:
+        - name: httpd
+          image: registry.access.redhat.com/ubi9/httpd-24:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: frontend-content
+              mountPath: /var/www/html/index.html
+              subPath: index.html
+      volumes:
+        - name: frontend-content
+          configMap:
+            name: frontend-content

@@ -282,3 +282,77 @@ For clusters that already have other Console plugins enabled, use the helper scr
 Demo message:
 
 > The Pipelines operator creates the plugin backend, but enabling it in the OpenShift Console is a platform Day 2 decision. RHACM can enforce that setting across every managed cluster.
+
+## Demo app: PostgreSQL + frontend with Argo CD sync waves
+
+This repo now includes a better App of Apps/ApplicationSet demo app under:
+
+```text
+apps/postgres-frontend-syncwave
+applicationsets/40-appset-postgres-frontend-syncwave-dev.yaml
+```
+
+The purpose is to show a customer that Argo CD can deploy an application in a controlled order:
+
+```text
+Wave -4  Namespace
+Wave -3  PostgreSQL credentials
+Wave -2  PostgreSQL service
+Wave -1  PostgreSQL deployment
+Wave  0  Database seed job
+Wave  1  Frontend content config
+Wave  2  Frontend deployment waits for seeded DB
+Wave  3  Frontend service and route
+Wave  4  PostSync smoke test
+```
+
+The frontend deployment has an init container that connects to PostgreSQL and waits until the seed job has created data in the database. This makes the demo easy to explain:
+
+> The database comes up first, data is seeded, then the frontend starts.
+
+Deploy to the dev spoke through the normal ApplicationSet flow:
+
+```bash
+oc config use-context hub
+
+oc -n openshift-gitops annotate applications.argoproj.io/rhacm-day2-applicationsets \
+  argocd.argoproj.io/refresh=hard --overwrite
+```
+
+Check the generated Argo CD application:
+
+```bash
+oc -n openshift-gitops get applications.argoproj.io | grep postgres-frontend
+```
+
+Check the app on the dev spoke:
+
+```bash
+oc --context dev-spoke -n postgres-frontend-demo get pods,svc,route,jobs
+oc --context dev-spoke -n postgres-frontend-demo logs job/postgres-seed
+oc --context dev-spoke -n postgres-frontend-demo logs deployment/frontend -c wait-for-seeded-database --prefix=true || true
+```
+
+Open the route:
+
+```bash
+oc --context dev-spoke -n postgres-frontend-demo get route frontend \
+  -o jsonpath='https://{.spec.host}{"\n"}'
+```
+
+Promote the same sync-wave app to prod:
+
+```bash
+./scripts/promote-postgres-frontend-to-prod.sh
+
+git add applicationsets/10-placements.yaml
+git commit -m "Promote PostgreSQL frontend sync-wave demo to prod"
+git push
+
+oc -n openshift-gitops annotate applications.argoproj.io/rhacm-day2-applicationsets \
+  argocd.argoproj.io/refresh=hard --overwrite
+```
+
+Demo message:
+
+> App of Apps gives us one GitOps entry point. ApplicationSet decides which clusters get the app. Sync waves make the deployment order explicit, so platform teams can show database-first rollouts, frontend startup dependencies, and smoke-test validation.

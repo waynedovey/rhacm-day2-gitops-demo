@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: postgres-frontend-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+  labels:
+    app.kubernetes.io/name: postgres-frontend-demo
+    app.kubernetes.io/part-of: rhacm-day2-demo

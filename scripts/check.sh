@@ -51,3 +51,12 @@ for c in "$DEV_CLUSTER" "$PROD_CLUSTER"; do
   oc --context "${c}" -n openshift-pipelines get svc,endpoints,pods 2>/dev/null | egrep "console-plugin|NAME" || true
   echo
 done
+
+
+echo
+print_header "PostgreSQL frontend sync-wave demo"
+oc -n openshift-gitops get applications.argoproj.io | grep postgres-frontend || true
+for c in dev-spoke prod-spoke; do
+  echo "===== $c ====="
+  oc --context "$c" -n postgres-frontend-demo get pods,svc,route,jobs 2>/dev/null || true
+done
