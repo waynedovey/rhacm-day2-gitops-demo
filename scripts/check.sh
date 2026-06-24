@@ -60,3 +60,11 @@ for c in dev-spoke prod-spoke; do
   echo "===== $c ====="
   oc --context "$c" -n postgres-frontend-demo get pods,svc,route,jobs 2>/dev/null || true
 done
+
+echo
+for c in dev-spoke prod-spoke; do
+  echo "===== BGD Rollouts demo on $c ====="
+  oc --context "$c" -n bgd-rollouts-demo get rollout,svc,route,pods 2>/dev/null || true
+  oc --context "$c" -n bgd-rollouts-demo get route bgd -o jsonpath='route=https://{.spec.host}{"\n"}stable={.spec.to.name}:{.spec.to.weight}{"\n"}canary={.spec.alternateBackends[0].name}:{.spec.alternateBackends[0].weight}{"\n"}' 2>/dev/null || true
+  echo
+ done

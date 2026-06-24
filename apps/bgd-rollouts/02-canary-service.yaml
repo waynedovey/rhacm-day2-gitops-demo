@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bgd-canary
+  namespace: bgd-rollouts-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    app: bgd
+    role: canary
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: bgd

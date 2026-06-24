@@ -356,3 +356,46 @@ oc -n openshift-gitops annotate applications.argoproj.io/rhacm-day2-applications
 Demo message:
 
 > App of Apps gives us one GitOps entry point. ApplicationSet decides which clusters get the app. Sync waves make the deployment order explicit, so platform teams can show database-first rollouts, frontend startup dependencies, and smoke-test validation.
+
+## BGD Rollouts progressive delivery demo
+
+This repo now includes a progressive delivery example based on the Red Hat OpenShift GitOps Workshop BGD app image:
+
+```text
+quay.io/rhdevelopers/bgd:1.0.0
+```
+
+Files added:
+
+```text
+apps/bgd-rollouts/
+applicationsets/50-appset-bgd-rollouts-dev.yaml
+policies/policy-enable-openshift-gitops-rollouts.yaml
+ROLLOUTS-DEMO.md
+scripts/update-bgd-rollout-color.sh
+scripts/watch-bgd-rollout.sh
+scripts/promote-bgd-rollout-step.sh
+scripts/abort-bgd-rollout.sh
+scripts/promote-bgd-rollouts-to-prod.sh
+```
+
+The rollout uses OpenShift Route traffic splitting with stable and canary services:
+
+```text
+20% canary -> pause -> 50% canary -> pause -> 100% promoted
+```
+
+Quick demo:
+
+```bash
+./scripts/update-bgd-rollout-color.sh green
+git add apps/bgd-rollouts/04-rollout.yaml
+git commit -m "Update BGD rollout color to green"
+git push
+./scripts/watch-bgd-rollout.sh dev-spoke
+./scripts/promote-bgd-rollout-step.sh dev-spoke
+./scripts/promote-bgd-rollout-step.sh dev-spoke
+```
+
+Full instructions are in `ROLLOUTS-DEMO.md`.
+

@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: bgd-rollout-smoke-test-
+  namespace: bgd-rollouts-demo
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  labels:
+    app: bgd
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke-test
+          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              microdnf install -y curl >/dev/null 2>&1 || true
+              echo "Testing bgd stable service"
+              for i in $(seq 1 30); do
+                if curl -ksf http://bgd-stable.bgd-rollouts-demo.svc.cluster.local:8080 >/tmp/result.html; then
+                  echo "BGD app responded successfully"
+                  head -5 /tmp/result.html || true
+                  exit 0
+                fi
+                echo "Waiting for bgd service... attempt $i"
+                sleep 5
+              done
+              echo "BGD app did not respond in time"
+              exit 1

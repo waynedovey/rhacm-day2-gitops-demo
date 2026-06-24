@@ -1,0 +1,23 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: bgd
+  namespace: bgd-rollouts-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  labels:
+    app: bgd
+spec:
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: bgd-stable
+    weight: 100
+  alternateBackends:
+    - kind: Service
+      name: bgd-canary
+      weight: 0

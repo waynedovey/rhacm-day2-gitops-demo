@@ -3,3 +3,4 @@ resources:
 - 20-gitopscluster.yaml
 - 30-appset-hello-openshift-dev.yaml
 - 40-appset-postgres-frontend-syncwave-dev.yaml
+- 50-appset-bgd-rollouts-dev.yaml

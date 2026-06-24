@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: bgd
+  namespace: bgd-rollouts-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app: bgd
+spec:
+  replicas: 4
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: bgd
+  template:
+    metadata:
+      labels:
+        app: bgd
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bgd
+          image: quay.io/rhdevelopers/bgd:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: COLOR
+              value: "blue"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+  strategy:
+    canary:
+      stableService: bgd-stable
+      canaryService: bgd-canary
+      trafficRouting:
+        plugins:
+          argoproj-labs/openshift:
+            routes:
+              - bgd
+      steps:
+        - setWeight: 20
+        - pause: {}
+        - setWeight: 50
+        - pause: {}
+        - setWeight: 100

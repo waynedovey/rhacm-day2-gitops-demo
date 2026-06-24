@@ -13,3 +13,4 @@ spec:
   - policy-install-openshift-lightspeed
   - policy-olm-v1-pipelines-version-control
   - policy-enable-pipelines-console-plugin
+  - policy-enable-openshift-gitops-rollouts

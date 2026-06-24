@@ -9,3 +9,4 @@ resources:
 - policy-olm-v1-pipelines-version-control.yaml
 - policy-enable-pipelines-console-plugin.yaml
 - 90-placementbindings.yaml
+- policy-enable-openshift-gitops-rollouts.yaml
