@@ -32,7 +32,7 @@ spec:
               protocol: TCP
           env:
             - name: COLOR
-              value: "green"
+              value: "blue"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
